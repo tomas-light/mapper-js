@@ -10,7 +10,7 @@ yarn add @tomas_light/mapper-js
 
 `MenuService.js`
 ```js
-import { Mapper } from 'mapper-js';
+import { Mapper } from '@tomas_light/mapper-js';
 
 export class MenuService {
   update(menu) {
@@ -29,7 +29,7 @@ or with Typescript:
 
 `MenuService.ts`
 ```ts
-import { Mapper } from 'mapper-js';
+import { Mapper } from '@tomas_light/mapper-js';
 import { MenuEntity } from './MenuEntity';
 import { Menu } from './Menu';
 
@@ -79,7 +79,7 @@ Add mapping profile for your models
 
 `EntityMappingProfile.js`
 ```js
-import { MapFunction, MappingProfile, MappingProfileBase } from 'mapper-js';
+import { MapFunction, MappingProfile, MappingProfileBase } from '@tomas_light/mapper-js';
 import { MenuEntity } from './MenuEntity';
 import { Menu } from './Menu';
 
@@ -124,7 +124,7 @@ or with Typescript
 
 `EntityMappingProfile.ts`
 ```ts
-import { MapFunction, MappingProfile, MappingProfileBase } from 'mapper-js';
+import { MapFunction, MappingProfile, MappingProfileBase } from '@tomas_light/mapper-js';
 import { MenuEntity } from './MenuEntity';
 import { Menu } from './Menu';
 
@@ -169,7 +169,7 @@ After that, register your profiles in Mapper. Don't forget to call this function
 
 `configureMapper.ts`
 ```ts
-import { Mapper } from 'mapper-js';
+import { Mapper } from '@tomas_light/mapper-js';
 import { EntityMappingProfile } from './EntityMappingProfile';
 
 export function configureMapper() {
