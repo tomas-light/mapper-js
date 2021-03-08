@@ -1,5 +1,10 @@
 # mapper-js
-JavaScript dependency injection like Autofac in .Net
+Auto mapper for you models like AutoMapper in .Net
+
+## Installation
+```cmd
+yarn add @tomas_light/mapper-js
+```
 
 ## How to use
 
