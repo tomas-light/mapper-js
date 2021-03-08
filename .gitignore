@@ -1,0 +1,15 @@
+# Visual Studio 2015 cache/options directory
+.vs/
+
+# JetBrains Rider
+.idea/
+
+node_modules
+dist/*
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+yarn.lock
+package.json-lock
