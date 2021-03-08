@@ -1,5 +1,5 @@
 {
-  "name": "mapper-js",
+  "name": "@tomas_light/mapper-js",
   "version": "1.0.0",
   "description": "Mapper for js entities",
   "scripts": {
