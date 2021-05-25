@@ -99,7 +99,7 @@ export class EntityMappingProfile extends MappingProfileBase {
     ];
   }
 
-  private static mapMenuToMenuEntity(menu) {
+  static mapMenuToMenuEntity(menu) {
     return {
       id: menu.id,
       create_date: menu.createDate.toISOString(),
@@ -109,7 +109,7 @@ export class EntityMappingProfile extends MappingProfileBase {
     }
   }
 
-  private static mapMenuEntityToMenu(entity) {
+  static mapMenuEntityToMenu(entity) {
     return {
       id: entity.id,
       createDate: new Date(entity.create_date),
