@@ -1,4 +1,1 @@
-export interface MapKey {
-  sourceType: string;
-  destinationType: string;
-}
+export type MapKey = string | Function;
