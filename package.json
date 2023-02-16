@@ -33,6 +33,5 @@
     "mapper",
     "nameof",
     "map entity"
-  ],
-  "packageManager": "yarn@3.4.1"
+  ]
 }
