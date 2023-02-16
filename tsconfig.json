@@ -12,8 +12,8 @@
     "strict": true,
     "sourceMap": true,
     "target": "es6",
-    "noImplicitAny": false,
-    "plugins": [{ "transform": "ts-nameof", "type": "raw" }]
+    "noImplicitAny": true,
+    "strictNullChecks": true
   },
   "include": ["src"],
   "exclude": [

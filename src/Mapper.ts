@@ -1,57 +1,100 @@
-import { MapKey } from './MapKey';
-import { MapFunction } from './MapFunction';
-import { MappingProfile } from './MappingProfile';
+import { MapFunctionKey } from './types';
 
-type SourceKey = MapKey;
-type DestinationKey = MapKey;
+export class MapFunction<Source extends object = any, Destination extends object = any> {
+  constructor(
+    public sourceKey: MapFunctionKey<Source>,
+    public destinationKey: MapFunctionKey<Destination>,
+    public map: (source: Source) => Destination
+  ) {}
+}
 
 export class Mapper {
-	private static mapFunctions = new Map<SourceKey, Map<DestinationKey, MapFunction>>();
+  constructor() {
+    Mapper.lastCreatedInstance = this;
+    this.mapFunctions = new Map();
+  }
 
-	private static findMapFunction(sourceKey: SourceKey, destinationKey: DestinationKey) {
-		const sourceMap = Mapper.mapFunctions.get(sourceKey);
-		if (!sourceMap || !sourceMap.has(destinationKey)) {
-			return undefined;
-		}
+  // we can have several isolated mapper instances (for example in tests or in different React Contexts)
+  private static lastCreatedInstance: Mapper;
 
-		return sourceMap.get(destinationKey);
-	}
+  private static getOrCreateInstance() {
+    if (Mapper.lastCreatedInstance) {
+      return Mapper.lastCreatedInstance;
+    }
 
-	static addProfiles(profiles: MappingProfile[]) {
-		profiles.forEach((profile: MappingProfile) => Mapper.addProfile(profile));
-	}
+    return new Mapper();
+  }
 
-	static addProfile(profile: MappingProfile) {
-		profile.get().forEach((mapFunction: MapFunction) => {
-			const addedMapFunction = Mapper.findMapFunction(mapFunction.sourceKey, mapFunction.destinationKey);
-			if (addedMapFunction) {
-				throw Error(
-					`Adding mapping failed: the mapping key already added (sourceType: ${mapFunction.sourceKey}, destinationType: ${mapFunction.destinationKey})`
-				);
-			}
+  readonly mapFunctions: Map<MapFunctionKey, Map<MapFunctionKey, MapFunction>>;
 
-			let sourceMap = Mapper.mapFunctions.get(mapFunction.sourceKey);
-			if (!sourceMap) {
-				sourceMap = new Map();
-				Mapper.mapFunctions.set(mapFunction.sourceKey, sourceMap);
-			}
+  static map: Mapper['map'] = (() => {
+    return (...args) => {
+      const mapper = Mapper.getOrCreateInstance();
+      return mapper.map(...args);
+    };
+  })();
 
-			sourceMap.set(mapFunction.destinationKey, mapFunction);
-		});
-	}
+  map<Source extends object, Destination extends object>(
+    sourceType: MapFunctionKey<Source>,
+    destinationType: MapFunctionKey<Destination>,
+    sourceModel: Source
+  ): Destination {
+    const mapFunction = this.findMapFunction(sourceType, destinationType) as
+      | MapFunction<Source, Destination>
+      | undefined;
 
-	static map<TDestination>(
-		sourceType: string,
-		destinationType: string,
-		sourceModel: any,
-		destinationModel?: TDestination
-	): TDestination {
-		const mapFunction: MapFunction | undefined = Mapper.findMapFunction(sourceType, destinationType);
-		if (!mapFunction) {
-			throw Error(
-				`A mapping for types not registered (sourceType: ${sourceType}, destinationType: ${destinationType})`
-			);
-		}
-		return mapFunction.map(sourceModel, destinationModel);
-	}
+    if (!mapFunction) {
+      throw Error(
+        `A mapping for types not registered (sourceType: ${stringifyKey(sourceType)}, destinationType: ${stringifyKey(
+          destinationType
+        )})`
+      );
+    }
+
+    return mapFunction.map(sourceModel);
+  }
+
+  static addMapFunctions: Mapper['addMapFunctions'] = (() => {
+    return (...args) => {
+      const mapper = Mapper.getOrCreateInstance();
+      return mapper.addMapFunctions(...args);
+    };
+  })();
+
+  addMapFunctions(...mapFunctions: MapFunction[]) {
+    mapFunctions.forEach((mapFunction) => {
+      const addedMapFunction = this.findMapFunction(mapFunction.sourceKey, mapFunction.destinationKey);
+      if (addedMapFunction) {
+        throw Error(
+          `Adding mapping failed: the mapping key already added (sourceType: ${stringifyKey(
+            mapFunction.sourceKey
+          )}, destinationType: ${stringifyKey(mapFunction.destinationKey)})`
+        );
+      }
+
+      let sourceMap = this.mapFunctions.get(mapFunction.sourceKey);
+      if (!sourceMap) {
+        sourceMap = new Map();
+        this.mapFunctions.set(mapFunction.sourceKey, sourceMap);
+      }
+
+      sourceMap.set(mapFunction.destinationKey, mapFunction);
+    });
+  }
+
+  private findMapFunction(sourceKey: MapFunctionKey, destinationKey: MapFunctionKey) {
+    const sourceMap = this.mapFunctions.get(sourceKey);
+    if (!sourceMap || !sourceMap.has(destinationKey)) {
+      return undefined;
+    }
+
+    return sourceMap.get(destinationKey);
+  }
 }
+
+const stringifyKey = (key: MapFunctionKey) => {
+  if (typeof key === 'symbol') {
+    return String(key);
+  }
+  return key.toString();
+};

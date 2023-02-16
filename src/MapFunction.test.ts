@@ -1,11 +1,14 @@
-import { MapFunction } from './MapFunction';
+import { MapFunction } from './Mapper';
+
+class Class1 {}
+class Class2 {}
 
 test('constructor', () => {
-	const fn = jest.fn();
+  const fn = jest.fn();
 
-	const result = new MapFunction('type 1', 'type 2', fn);
+  const result = new MapFunction(Class1, Class2, fn);
 
-	expect(result.sourceKey).toBe('type 1');
-	expect(result.destinationKey).toBe('type 2');
-	expect(result.map).toBe(fn);
+  expect(result.sourceKey).toBe(Class1);
+  expect(result.destinationKey).toBe(Class2);
+  expect(result.map).toBe(fn);
 });

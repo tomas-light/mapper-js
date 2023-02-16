@@ -1,5 +1,3 @@
-export * from './MapKey';
-export * from './MappingProfile';
-export * from './MapFunction';
+export * from './autoMap';
 export * from './Mapper';
-export * from './MappingProfileBase';
+export * from './types';

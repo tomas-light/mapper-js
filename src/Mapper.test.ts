@@ -1,166 +1,356 @@
-import { MapFunction } from './MapFunction';
-import { Mapper } from './Mapper';
+import { autoMap } from './autoMap';
+import { MapFunction, Mapper } from './Mapper';
 
 class Class1 {
-	myProp: string;
+  myProp: string;
 
-	constructor(myProp: string) {
-		this.myProp = myProp;
-	}
+  constructor(myProp: string) {
+    this.myProp = myProp;
+  }
 }
 
 class Class2 {
-	yourProp: string;
+  yourProp: string;
 
-	constructor(yourProp: string) {
-		this.yourProp = yourProp;
-	}
+  constructor(yourProp: string) {
+    this.yourProp = yourProp;
+  }
 }
 
-describe('addProfile with classes as key', () => {
-	const mapFn1 = new MapFunction<any>(Class1, Class2, () => undefined);
-	const mapFn2 = new MapFunction<any>(Class2, Class1, () => undefined);
+const mapFn1 = new MapFunction(Class1, Class2, (class1) => new Class2(class1.myProp));
+const mapFn2 = new MapFunction(Class2, Class1, (class2) => new Class1(class2.yourProp));
 
-	test('1 profile', () => {
-		Mapper['mapFunctions'] = new Map();
+describe('[class] Mapper', () => {
+  test('if we can use symbols as map function keys', () => {
+    const mapper = new Mapper();
+    const symbol1 = Symbol('test dto');
+    const symbol2 = Symbol('mapped object');
 
-		Mapper.addProfile({
-			get: () => [mapFn1],
-		});
+    const dto = {
+      date: '2023-02-15T13:20:48.794Z',
+    };
 
-		expect(Mapper['mapFunctions'].size).toBe(1);
-		expect(Mapper['mapFunctions'].get(Class1)!.get(Class2)).toBe(mapFn1);
-	});
+    type MyObj = {
+      date: Date;
+    };
 
-	test('2 profiles', () => {
-		Mapper['mapFunctions'] = new Map();
+    mapper.addMapFunctions(
+      new MapFunction<typeof dto, MyObj>(symbol1, symbol2, (dto) => ({
+        date: new Date(dto.date),
+      }))
+    );
 
-		Mapper.addProfile({
-			get: () => [mapFn1, mapFn2],
-		});
+    const mappedObj = mapper.map<typeof dto, MyObj>(symbol1, symbol2, dto);
+    expect(mappedObj.date instanceof Date).toBeTruthy();
+    expect(mappedObj.date.toISOString()).toBe(dto.date);
+  });
 
-		expect(Mapper['mapFunctions'].size).toBe(2);
-		expect(Mapper['mapFunctions'].get(Class1)!.get(Class2)).toBe(mapFn1);
-		expect(Mapper['mapFunctions'].get(Class2)!.get(Class1)).toBe(mapFn2);
-	});
+  describe('[method] addProfile', () => {
+    test('add 1 profile', () => {
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFn1);
 
-	test('exception', () => {
-		expect(() => {
-			Mapper.addProfile({
-				get: () => [mapFn1, mapFn1],
-			});
-		}).toThrow();
-	});
-});
+      expect(mapper['mapFunctions'].size).toBe(1);
+      expect(mapper['mapFunctions'].get(Class1)!.get(Class2)).toBe(mapFn1);
+    });
 
-describe('addProfile with string keys', () => {
-	const mapFn1 = new MapFunction<any>(nameof<Class1>(), nameof<Class2>(), () => undefined);
-	const mapFn2 = new MapFunction<any>(nameof<Class2>(), nameof<Class1>(), () => undefined);
+    test('add 2 profiles', () => {
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFn1);
+      mapper.addMapFunctions(mapFn2);
 
-	test('1 profile', () => {
-		Mapper['mapFunctions'] = new Map();
+      expect(mapper['mapFunctions'].size).toBe(2);
+      expect(mapper['mapFunctions'].get(Class1)!.get(Class2)).toBe(mapFn1);
+      expect(mapper['mapFunctions'].get(Class2)!.get(Class1)).toBe(mapFn2);
+    });
 
-		Mapper.addProfile({
-			get: () => [mapFn1],
-		});
+    test('if tries to register mapper for already registered token, it should to throw an exception', () => {
+      const mapper = new Mapper();
 
-		expect(Mapper['mapFunctions'].size).toBe(1);
-		expect(Mapper['mapFunctions'].get(nameof<Class1>())!.get(nameof<Class2>())).toBe(mapFn1);
-	});
+      expect(() => {
+        mapper.addMapFunctions(mapFn1, mapFn1);
+      }).toThrow();
+    });
+  });
 
-	test('2 profiles', () => {
-		Mapper['mapFunctions'] = new Map();
+  describe('[method] map', () => {
+    test('class 1 -> class 2', () => {
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFn1);
 
-		Mapper.addProfile({
-			get: () => [mapFn1, mapFn2],
-		});
+      const obj1 = new Class1('qwe');
+      const result = mapper.map(Class1, Class2, obj1);
 
-		expect(Mapper['mapFunctions'].size).toBe(2);
-		expect(Mapper['mapFunctions'].get(nameof<Class1>())!.get(nameof<Class2>())).toBe(mapFn1);
-		expect(Mapper['mapFunctions'].get(nameof<Class2>())!.get(nameof<Class1>())).toBe(mapFn2);
-	});
+      expect(result instanceof Class2).toBe(true);
+      expect(result.yourProp).toBe('qwe');
+    });
 
-	test('exception', () => {
-		expect(() => {
-			Mapper.addProfile({
-				get: () => [mapFn1, mapFn1],
-			});
-		}).toThrow();
-	});
-});
+    test('class 2 -> class 1', () => {
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFn2);
 
-test('addProfiles', () => {
-	const mapFn1 = new MapFunction<any>(nameof<Class1>(), nameof<Class2>(), () => undefined);
-	const mapFn2 = new MapFunction<any>(nameof<Class2>(), nameof<Class1>(), () => undefined);
+      const obj2 = new Class2('qqq');
+      const result = mapper.map(Class2, Class1, obj2);
 
-	const mockFn = jest.fn();
+      expect(result instanceof Class1).toBe(true);
+      expect(result.myProp).toBe('qqq');
+    });
 
-	const spy = jest.spyOn(Mapper, 'addProfile');
-	spy.mockImplementation((...args) => {
-		mockFn(...args);
-	});
+    test('if tries to map model without registered profile, it should to throw an exception', () => {
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFn1, mapFn2);
 
-	Mapper['mapFunctions'] = new Map();
-	Mapper['addProfiles']([{ get: () => [mapFn1] }, { get: () => [mapFn2] }]);
+      class Class3 {
+      }
 
-	expect(mockFn).toHaveBeenCalledTimes(2);
-	spy.mockClear();
-});
+      expect(() => {
+        mapper.map(Class3, Class1, {
+          any: 123,
+        });
+      }).toThrow();
+    });
 
-describe('map', () => {
-	const mapFn1 = new MapFunction<any>(
-		nameof<Class1>(),
-		nameof<Class2>(),
-		(class1: Class1): Class2 => new Class2(class1.myProp)
-	);
-	const mapFn2 = new MapFunction<any>(nameof<Class2>(), nameof<Class1>(), (class2: Class2, class1?: Class1): Class1 => {
-		if (class1) {
-			class1.myProp = class2.yourProp;
-			return class1;
-		}
+    test('abstract class -> regular class', () => {
+      abstract class Dto {
+        abstract value: number;
+      }
 
-		return new Class1(class2.yourProp);
-	});
+      class Model {
+        value = 2;
+      }
 
-	beforeAll(() => {
-		Mapper['mapFunctions'] = new Map([
-			[nameof<Class1>(), new Map([[nameof<Class2>(), mapFn1]])],
-			[nameof<Class2>(), new Map([[nameof<Class1>(), mapFn2]])],
-		]);
-	});
+      const mapFunction = new MapFunction(Dto, Model, (dto) => {
+        const model = new Model();
+        model.value = dto.value;
+        return model;
+      });
 
-	test('class 1 -> class 2', () => {
-		const obj1 = new Class1('qwe');
-		const result = Mapper.map<Class2>(nameof<Class1>(), nameof<Class2>(), obj1);
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
 
-		expect(result instanceof Class2).toBe(true);
-		expect(result.yourProp).toBe('qwe');
-	});
+      const dto: Dto = {
+        value: 14,
+      };
+      const result = mapper.map(Dto, Model, dto);
 
-	test('class 2 -> class 1', () => {
-		const obj2 = new Class2('qqq');
-		const result = Mapper.map<Class1>(nameof<Class2>(), nameof<Class1>(), obj2);
+      expect(result instanceof Model).toBe(true);
+      expect(result.value).toBe(14);
+    });
 
-		expect(result instanceof Class1).toBe(true);
-		expect(result.myProp).toBe('qqq');
-	});
+    test('abstract class -> abstract class', () => {
+      abstract class Dto {
+        abstract name: string;
+      }
 
-	test('class 2 -> existed class 1', () => {
-		const obj1 = new Class1('ddd');
-		const obj2 = new Class2('1234');
-		const result = Mapper.map<Class1>(nameof<Class2>(), nameof<Class1>(), obj2, obj1);
+      abstract class Model {
+        abstract name: string;
+      }
 
-		expect(result).toBe(obj1);
-		expect(obj1.myProp).toBe('1234');
-	});
+      const mapFunction = new MapFunction(Dto, Model, (dto) => {
+        return {
+          name: dto.name,
+        };
+      });
 
-	test('exception', () => {
-		class Class3 {}
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
 
-		expect(() => {
-			Mapper.map<Class1>(nameof<Class3>(), nameof<Class1>(), {
-				any: 123,
-			});
-		}).toThrow();
-	});
+      const dto: Dto = {
+        name: 'my name',
+      };
+      const result = mapper.map(Dto, Model, dto);
+
+      expect(result.name).toBe('my name');
+    });
+  });
+
+  describe('using auto mapping', () => {
+    test('if primitives are auto mapped correctly with default config', () => {
+      abstract class UserDto {
+        abstract name: string;
+        abstract age: number;
+        abstract married: boolean;
+        abstract id: symbol;
+        abstract children: { name: string }[];
+      }
+
+      abstract class User {
+        abstract name: string;
+        abstract age: number;
+        abstract married: boolean;
+        abstract id: symbol;
+      }
+
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {}));
+
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
+
+      const dto: UserDto = {
+        age: 23,
+        name: 'Joe',
+        married: false,
+        id: Symbol(),
+        children: [{name: 'Alex'}],
+      };
+      const user = mapper.map(UserDto, User, dto);
+
+      expect(user).toEqual({
+        age: 23,
+        name: 'Joe',
+        married: false,
+        id: dto.id,
+      } satisfies typeof user);
+    });
+
+    test('extra properties should be mapped separately', () => {
+      abstract class UserDto {
+        abstract name: string;
+        abstract age: number;
+        abstract children?: { name: string }[];
+      }
+
+      abstract class User {
+        abstract name: string;
+        abstract age: number;
+        abstract deleted: boolean;
+      }
+
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => {
+        const user = autoMap(dto, {}, {});
+        return {
+          deleted: true,
+          ...user,
+        };
+      });
+
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
+
+      const dto: UserDto = {
+        age: 23,
+        name: 'Joe',
+        children: [{name: 'Alex'}],
+      };
+      const user = mapper.map(UserDto, User, dto);
+
+      expect(user).toEqual({
+        age: 23,
+        name: 'Joe',
+        deleted: true,
+      } satisfies typeof user);
+    });
+
+    test('if array will be copied when it specified in config', () => {
+      abstract class UserDto {
+        abstract name: string;
+        abstract age: number;
+        abstract children: { name: string }[];
+      }
+
+      abstract class User {
+        abstract name: string;
+        abstract age: number;
+        abstract deleted: boolean;
+        abstract children: { name: string }[];
+      }
+
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => {
+        const user = autoMap(dto, {}, {
+          copyArrays: true,
+        });
+        return {
+          deleted: true,
+          ...user,
+        };
+      });
+
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
+
+      const dto: UserDto = {
+        age: 23,
+        name: 'Joe',
+        children: [{name: 'Alex'}],
+      };
+      const user = mapper.map(UserDto, User, dto);
+
+      expect(user).toEqual({
+        age: 23,
+        name: 'Joe',
+        deleted: true,
+        children: [{name: 'Alex'}],
+      } satisfies typeof user);
+    });
+
+    test('if will be mapped only selected properties', () => {
+      abstract class UserDto {
+        abstract name: string;
+        abstract age: number;
+        abstract id: number;
+        abstract sex: 'male' | 'female';
+        abstract children: { name: string }[];
+      }
+
+      abstract class User {
+        abstract age: number;
+      }
+
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {
+        select: ['age'],
+      }));
+
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
+
+      const dto: UserDto = {
+        age: 23,
+        name: 'Joe',
+        sex: 'male',
+        id: 33445,
+        children: [{name: 'Alex'}],
+      };
+      const user = mapper.map(UserDto, User, dto);
+
+      expect(user).toEqual({
+        age: 23,
+      } satisfies typeof user);
+    });
+
+    test('if ignored properties will not be mapped', () => {
+      abstract class UserDto {
+        abstract name: string;
+        abstract age: number;
+        abstract id: number;
+        abstract sex: 'male' | 'female';
+        abstract children: { name: string }[];
+      }
+
+      abstract class User {
+        abstract name: string;
+        abstract age: number;
+      }
+
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {
+        ignore: ['id', 'sex'],
+      }));
+
+      const mapper = new Mapper();
+      mapper.addMapFunctions(mapFunction);
+
+      const dto: UserDto = {
+        age: 23,
+        name: 'Joe',
+        sex: 'male',
+        id: 33445,
+        children: [{name: 'Alex'}],
+      };
+      const user = mapper.map(UserDto, User, dto);
+
+      expect(user).toEqual({
+        name: 'Joe',
+        age: 23,
+      } satisfies typeof user);
+    });
+  });
 });
