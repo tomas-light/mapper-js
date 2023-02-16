@@ -66,9 +66,60 @@ const mappedObj = Mapper.map<typeof userDto, IUser>(userDtoSymbol, userInterface
 mappedObj.date.toISOString(); // same as dto.date
 ```
 
+You can find more examples in `mapper-js/src/Mapper.test.ts`
+
 ### Auto mapping
 
 Here we have utility function to reduce boilerplate in your Map functions called `autoMap`.
 
+```ts
+import { Mapper, MapFunction, autoMap } from '@tomas-light/mapper-js';
 
-You can find more examples in `mapper-js/src/Mapper.test.ts`
+abstract class UserDto {
+  abstract name: string;
+  abstract age: number;
+  abstract children?: { name: string }[];
+}
+
+abstract class User {
+  abstract name: string;
+  abstract deleted: boolean;
+}
+
+const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => {
+  const user = autoMap(dto, {}, {
+    ignore: ['age'],
+  });
+  return {
+    deleted: true,
+    ...user,
+  };
+});
+
+const mapper = new Mapper();
+mapper.addMapFunctions(mapFunction);
+
+const dto: UserDto = {
+  age: 23,
+  name: 'Joe',
+  children: [{name: 'Alex'}],
+};
+const user = mapper.map(UserDto, User, dto); // { name: 'Joe', deleted: true, }
+```
+
+Here is a demo how `autoMap` works:
+
+![mapper-js demo](readme-images/mapper-js%20autoMap%20demo.gif)
+
+#### Config options:
+
+| Property              | Description                                                                                                                                                                             |
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `copyArrays?: true`  | If `true` nested *arrays* will be copied from source object                                                                                                                             |
+| `copyObjects?: true` | If `true` nested *objects* will be copied from source object                                                                                                                            |
+| `select?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties will be mapped. If not specified, all properties will be mapped                                                  |
+| `ignore?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties should be skipped. It has higher priority over `select` option.                                                  |
+
+If config does not include both `copyArrays` and `copyObjects`, only primitive types will be mapped.
+
+You can find more examples in `mapper-js/src/autoMap.test.ts` and `mapper-js/src/autoMapDemo.test.ts`
