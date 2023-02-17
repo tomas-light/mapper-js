@@ -26,7 +26,7 @@ describe('use cases', () => {
 
   test('if we can ignore some properties with config', () => {
     const user = userSource();
-    const newUser = autoMap(user, {}, {ignore: ['married', 'id']});
+    const newUser = autoMap(user, {}, { ignore: ['married', 'id'] });
     expect(newUser).toEqual({
       name: user.name,
       age: user.age,
@@ -35,7 +35,7 @@ describe('use cases', () => {
 
   test('if we can choose, which of properties should be mapped with config', () => {
     const user = userSource();
-    const newUser = autoMap(user, {}, {select: ['id', 'education.high'], copyObjects: true});
+    const newUser = autoMap(user, {}, { select: ['id', 'education.high'], copyObjects: true });
     expect(newUser).toEqual({
       id: user.id,
       education: {
@@ -46,11 +46,15 @@ describe('use cases', () => {
 
   test('if we can copy nested objects and array with config', () => {
     const user = userSource();
-    const newUser = autoMap(user, {}, {
-      select: ['education', 'children'],
-      copyObjects: true,
-      copyArrays: true,
-    });
+    const newUser = autoMap(
+      user,
+      {},
+      {
+        select: ['education', 'children'],
+        copyObjects: true,
+        copyArrays: true,
+      }
+    );
     expect(newUser).toEqual({
       education: user.education,
       children: user.children,
@@ -78,11 +82,15 @@ describe('use cases', () => {
         },
       },
     };
-    const newUser = autoMap(deepObjects, {}, {
-      select: ['level1.level2.bar', 'level1.level2.level3.zax', 'level1.level2.level3.level4'],
-      copyObjects: true,
-      copyArrays: true,
-    });
+    const newUser = autoMap(
+      deepObjects,
+      {},
+      {
+        select: ['level1.level2.bar', 'level1.level2.level3.zax', 'level1.level2.level3.level4'],
+        copyObjects: true,
+        copyArrays: true,
+      }
+    );
     expect(newUser).toEqual({
       level1: {
         level2: {
@@ -149,7 +157,7 @@ describe('use cases', () => {
 });
 
 test('if it is a new object', () => {
-  const source = {some: 'qqq'};
+  const source = { some: 'qqq' };
   const destination = autoMap(source, {}, {});
   expect(destination).not.toBe(source);
 });
@@ -189,7 +197,7 @@ describe('if object properties are mapped', () => {
     nullProperty: null,
     arrayProperty: array,
   };
-  const destination = autoMap(source, {}, {copyObjects: true, copyArrays: true});
+  const destination = autoMap(source, {}, { copyObjects: true, copyArrays: true });
 
   test('null property is mapped', () => {
     expect(destination.nullProperty).toBe(null);
@@ -211,7 +219,7 @@ describe('if object properties are mapped', () => {
       },
     };
 
-    const destination = autoMap(source, {}, {copyObjects: true});
+    const destination = autoMap(source, {}, { copyObjects: true });
 
     test('nested objects has different refs', () => {
       expect(destination.some).not.toBe(source.some);
@@ -253,4 +261,37 @@ test('empty destination', () => {
   const destination = autoMap(source, {}, {});
   expect(destination).not.toBe(source);
   expect(destination.prop1).toBe('qqq');
+});
+
+test('autoMap just return source, if passed null as source', () => {
+  const result = autoMap(null as unknown as object, {}, {});
+  expect(result).toBeNull();
+});
+
+test('autoMap just return source, if passed not an object as source', () => {
+  const result = autoMap('' as unknown as object, {}, {});
+  expect(result).toBe('');
+});
+
+test('autoMap throws an error, if array passed as source', () => {
+  expect(() => autoMap([] as unknown as object, {}, {})).toThrowError(
+    'auto mapping is not available when the source object is an array'
+  );
+});
+
+test('symbols in select config will be stringified', () => {
+  const symbol = Symbol('some prop');
+  const result = autoMap(
+    {
+      name: 'Joe',
+      [symbol]: 123,
+    },
+    {},
+    {
+      select: ['name', symbol as any],
+    }
+  );
+  expect(result).toEqual({
+    name: 'Joe',
+  });
 });

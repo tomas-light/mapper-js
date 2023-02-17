@@ -37,9 +37,9 @@ export type Config<Source extends object> = {
   copyArrays?: true;
   copyObjects?: true;
   /** 'select' has more priority than 'ignore' property */
-  select?: Array<DottedKeys<Source>>
+  select?: Array<DottedKeys<Source>>;
   /** this property works only when 'select' property is not passed */
-  ignore?: Array<DottedKeys<Source>>
+  ignore?: Array<DottedKeys<Source>>;
 };
 
 export type Primitives = string | number | boolean | undefined | symbol | bigint | null;
@@ -85,7 +85,7 @@ export type DeepSelect<
   IgnoredKeys extends keyof T = never,
   ValueConstraint = any
 > = {
-  [key in string & (keyof T) as key extends Exclude<SelectedKeys, IgnoredKeys>
+  [key in string & keyof T as key extends Exclude<SelectedKeys, IgnoredKeys>
     ? T[key] extends ValueConstraint
       ? key
       : never

@@ -3,6 +3,7 @@ Auto mapper for you models like AutoMapper in .Net
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/mui/material-ui/blob/HEAD/LICENSE)
 [![npm latest package](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)
+[![Coverage Status](https://img.shields.io/codecov/c/github/tomas-light/mapper-js/master.svg)](https://codecov.io/gh/tomas-light/mapper-js/branch/master)
 
 ## Installation
 npm

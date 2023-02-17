@@ -1,6 +1,4 @@
-import {
-  Config, AutoMapFunction, DottedKeys, Primitives, DeepSelect, NestedDottedKeys, MapFunctionResult, NotArray,
-} from './types';
+import { AutoMapFunction, Config, DottedKeys } from './types';
 
 export const autoMap = <Source extends object, SourceConfig extends Config<Source>>(
   source: Source,
@@ -20,12 +18,10 @@ export const autoMap = <Source extends object, SourceConfig extends Config<Sourc
     const topLevelSelectedKeys = getFirstLevelOfDottedKeys(config.select);
     filteredKeys = filteredKeys.filter((selectedKey) => topLevelSelectedKeys.includes(selectedKey as string));
   }
-  // if ('ignore' in config && config.ignore) {
-  //   const topLevelIgnoredKeys = getFirstLevelOfDottedKeys(config.ignore);
-  //   filteredKeys = filteredKeys.filter((selectedKey) => !topLevelIgnoredKeys.includes(selectedKey as string));
-  // }
+
   if ('ignore' in config && config.ignore) {
-    filteredKeys = filteredKeys.filter((selectedKey) => !config.ignore!.includes(selectedKey as any));
+    const { ignore } = config; // unboxing to prevent appears of undefined or null in the ref
+    filteredKeys = filteredKeys.filter((selectedKey) => !ignore.includes(selectedKey as any));
   }
 
   for (const sourceKey of filteredKeys) {
@@ -57,23 +53,6 @@ export const autoMap = <Source extends object, SourceConfig extends Config<Sourc
 
     if ('select' in nextLevelConfig && nextLevelConfig.select) {
       nextLevelConfig.select = getNextLevelOfDottedKeys(nextLevelConfig.select) as any;
-
-      if (nextLevelConfig.select && nextLevelConfig.select.length > 0) {
-        const doesConfigIncludesEntireObjectLevel =
-          // just type guard
-          'select' in config &&
-          config.select &&
-          // config includes sourceKey (because we are in related condition branch), but does not contains `<sourceKey>.<nestedKey>`
-          !config.select.filter((key) => (key as string).startsWith(`${sourceKey.toString()}.`));
-        if (doesConfigIncludesEntireObjectLevel) {
-          // if you pass `select: ['prop']` for object `{ prop: { a: '', b: '', c: '' } }`
-          // it means you want to copy entire `prop` object
-          // so we have to add all its keys to 'select' property
-          Object.keys(value).forEach((key) => {
-            nextLevelConfig.select!.push(key as any);
-          });
-        }
-      }
     }
 
     if ('ignore' in nextLevelConfig && nextLevelConfig.ignore) {

@@ -45,9 +45,7 @@ export class Mapper {
 
     if (!mapFunction) {
       throw Error(
-        `A mapping for types not registered (sourceType: ${stringifyKey(sourceType)}, destinationType: ${stringifyKey(
-          destinationType
-        )})`
+        `A mapping for types not registered (sourceType: ${sourceType.toString()}, destinationType: ${destinationType.toString()})`
       );
     }
 
@@ -66,9 +64,7 @@ export class Mapper {
       const addedMapFunction = this.findMapFunction(mapFunction.sourceKey, mapFunction.destinationKey);
       if (addedMapFunction) {
         throw Error(
-          `Adding mapping failed: the mapping key already added (sourceType: ${stringifyKey(
-            mapFunction.sourceKey
-          )}, destinationType: ${stringifyKey(mapFunction.destinationKey)})`
+          `Adding mapping failed: the mapping key already added (sourceType: ${mapFunction.sourceKey.toString()}, destinationType: ${mapFunction.destinationKey.toString()})`
         );
       }
 
@@ -91,10 +87,3 @@ export class Mapper {
     return sourceMap.get(destinationKey);
   }
 }
-
-const stringifyKey = (key: MapFunctionKey) => {
-  if (typeof key === 'symbol') {
-    return String(key);
-  }
-  return key.toString();
-};

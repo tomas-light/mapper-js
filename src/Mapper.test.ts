@@ -100,8 +100,7 @@ describe('[class] Mapper', () => {
       const mapper = new Mapper();
       mapper.addMapFunctions(mapFn1, mapFn2);
 
-      class Class3 {
-      }
+      class Class3 {}
 
       expect(() => {
         mapper.map(Class3, Class1, {
@@ -181,7 +180,7 @@ describe('[class] Mapper', () => {
         abstract id: symbol;
       }
 
-      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {}));
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, (dto) => autoMap(dto, {}, {}));
 
       const mapper = new Mapper();
       mapper.addMapFunctions(mapFunction);
@@ -191,7 +190,7 @@ describe('[class] Mapper', () => {
         name: 'Joe',
         married: false,
         id: Symbol(),
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       };
       const user = mapper.map(UserDto, User, dto);
 
@@ -216,7 +215,7 @@ describe('[class] Mapper', () => {
         abstract deleted: boolean;
       }
 
-      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => {
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, (dto) => {
         const user = autoMap(dto, {}, {});
         return {
           deleted: true,
@@ -230,7 +229,7 @@ describe('[class] Mapper', () => {
       const dto: UserDto = {
         age: 23,
         name: 'Joe',
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       };
       const user = mapper.map(UserDto, User, dto);
 
@@ -255,10 +254,14 @@ describe('[class] Mapper', () => {
         abstract children: { name: string }[];
       }
 
-      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => {
-        const user = autoMap(dto, {}, {
-          copyArrays: true,
-        });
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, (dto) => {
+        const user = autoMap(
+          dto,
+          {},
+          {
+            copyArrays: true,
+          }
+        );
         return {
           deleted: true,
           ...user,
@@ -271,7 +274,7 @@ describe('[class] Mapper', () => {
       const dto: UserDto = {
         age: 23,
         name: 'Joe',
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       };
       const user = mapper.map(UserDto, User, dto);
 
@@ -279,7 +282,7 @@ describe('[class] Mapper', () => {
         age: 23,
         name: 'Joe',
         deleted: true,
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       } satisfies typeof user);
     });
 
@@ -296,9 +299,15 @@ describe('[class] Mapper', () => {
         abstract age: number;
       }
 
-      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {
-        select: ['age'],
-      }));
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, (dto) =>
+        autoMap(
+          dto,
+          {},
+          {
+            select: ['age'],
+          }
+        )
+      );
 
       const mapper = new Mapper();
       mapper.addMapFunctions(mapFunction);
@@ -308,7 +317,7 @@ describe('[class] Mapper', () => {
         name: 'Joe',
         sex: 'male',
         id: 33445,
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       };
       const user = mapper.map(UserDto, User, dto);
 
@@ -331,9 +340,15 @@ describe('[class] Mapper', () => {
         abstract age: number;
       }
 
-      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, dto => autoMap(dto, {}, {
-        ignore: ['id', 'sex'],
-      }));
+      const mapFunction = new MapFunction<UserDto, User>(UserDto, User, (dto) =>
+        autoMap(
+          dto,
+          {},
+          {
+            ignore: ['id', 'sex'],
+          }
+        )
+      );
 
       const mapper = new Mapper();
       mapper.addMapFunctions(mapFunction);
@@ -343,7 +358,7 @@ describe('[class] Mapper', () => {
         name: 'Joe',
         sex: 'male',
         id: 33445,
-        children: [{name: 'Alex'}],
+        children: [{ name: 'Alex' }],
       };
       const user = mapper.map(UserDto, User, dto);
 
@@ -351,6 +366,59 @@ describe('[class] Mapper', () => {
         name: 'Joe',
         age: 23,
       } satisfies typeof user);
+    });
+  });
+});
+
+describe('static instance access', () => {
+  abstract class Dto {
+    abstract name: string;
+  }
+  abstract class User {
+    abstract name: string;
+  }
+
+  new Mapper();
+
+  test('have map function Dto => User', () => {
+    const mapFunction = new MapFunction<Dto, User>(Dto, User, (dto) => autoMap(dto, {}, {}));
+    Mapper.addMapFunctions(mapFunction);
+
+    const dto: Dto = {
+      name: 'Joe',
+    };
+    const user = Mapper.map(Dto, User, dto);
+
+    expect(user).toEqual({
+      name: 'Joe',
+    } satisfies typeof user);
+  });
+
+  describe('create new Mapper', () => {
+    test('does not have previously registered map functions', () => {
+      new Mapper();
+
+      expect(() =>
+        Mapper.map(Dto, User, {
+          name: 'Joe',
+        })
+      ).toThrowError(
+        `A mapping for types not registered (sourceType: ${Dto.toString()}, destinationType: ${User.toString()})`
+      );
+    });
+
+    test('map functions registered in new Mapper', () => {
+      const mapFunction = new MapFunction<User, Dto>(User, Dto, (dto) => autoMap(dto, {}, {}));
+      Mapper.addMapFunctions(mapFunction);
+
+      const user: User = {
+        name: 'Joe',
+      };
+      const dto = Mapper.map(User, Dto, user);
+
+      expect(dto).toEqual({
+        name: 'Joe',
+      } satisfies typeof dto);
     });
   });
 });
