@@ -2,7 +2,7 @@
 
 Separates your models mapping for main logic.
 
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/mui/material-ui/blob/HEAD/LICENSE)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/tomas-light/mapper-js/blob/HEAD/LICENSE)
 [![npm latest package](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)
 [![codecov](https://codecov.io/github/tomas-light/mapper-js/branch/main/graph/badge.svg?token=NuAoioGPVD)](https://codecov.io/github/tomas-light/mapper-js)
 
