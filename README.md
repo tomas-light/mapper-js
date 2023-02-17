@@ -1,5 +1,6 @@
 # mapper-js
-Auto mapper for you models like AutoMapper in .Net
+
+Separates your models mapping for main logic.
 
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/mui/material-ui/blob/HEAD/LICENSE)
 [![npm latest package](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)](https://img.shields.io/npm/v/@tomas-light/mapper-js/latest.svg)
@@ -111,7 +112,7 @@ const dto: UserDto = {
 const user = mapper.map(UserDto, User, dto); // { name: 'Joe', deleted: true, }
 ```
 
-Here is a demo how `autoMap` works:
+Here is a demo how `autoMap` works (it is a GIF):
 
 ![mapper-js demo](readme-images/mapper-js%20autoMap%20demo.gif)
 
