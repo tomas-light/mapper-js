@@ -1,5 +1,7 @@
 import { autoMap } from './autoMap';
 
+const expectType = <T>(valueOfType: T): void => undefined;
+
 describe('use cases', () => {
   const userSource = () => ({
     name: 'Joe',
@@ -16,6 +18,14 @@ describe('use cases', () => {
   test('if only primitives are copied with empty config', () => {
     const user = userSource();
     const newUser = autoMap(user, {}, {});
+
+    expectType<{
+      name: string;
+      age: number;
+      married: boolean;
+      id: symbol;
+    }>(newUser);
+
     expect(newUser).toEqual({
       name: user.name,
       age: user.age,
@@ -27,6 +37,12 @@ describe('use cases', () => {
   test('if we can ignore some properties with config', () => {
     const user = userSource();
     const newUser = autoMap(user, {}, { ignore: ['married', 'id'] });
+
+    expectType<{
+      name: string;
+      age: number;
+    }>(newUser);
+
     expect(newUser).toEqual({
       name: user.name,
       age: user.age,
@@ -36,6 +52,14 @@ describe('use cases', () => {
   test('if we can choose, which of properties should be mapped with config', () => {
     const user = userSource();
     const newUser = autoMap(user, {}, { select: ['id', 'education.high'], copyObjects: true });
+
+    expectType<{
+      id: symbol;
+      education: {
+        high: boolean;
+      };
+    }>(newUser);
+
     expect(newUser).toEqual({
       id: user.id,
       education: {
@@ -55,6 +79,14 @@ describe('use cases', () => {
         copyArrays: true,
       }
     );
+
+    expectType<{
+      education: {
+        high: boolean;
+      };
+      children: string[];
+    }>(newUser);
+
     expect(newUser).toEqual({
       education: user.education,
       children: user.children,
@@ -91,6 +123,21 @@ describe('use cases', () => {
         copyArrays: true,
       }
     );
+
+    expectType<{
+      level1: {
+        level2: {
+          bar: string;
+          level3: {
+            zax: number;
+            level4: {
+              cosmo: null;
+            };
+          };
+        };
+      };
+    }>(newUser);
+
     expect(newUser).toEqual({
       level1: {
         level2: {
@@ -140,6 +187,20 @@ describe('use cases', () => {
       }
     );
 
+    expectType<{
+      employees: {
+        sellers: {
+          Suzie: {
+            age: number;
+            staffDiscount: {
+              forChildren: boolean;
+              forHusband: boolean;
+            };
+          };
+        };
+      };
+    }>(newZoo);
+
     expect(newZoo).toEqual({
       employees: {
         sellers: {
@@ -159,6 +220,11 @@ describe('use cases', () => {
 test('if it is a new object', () => {
   const source = { some: 'qqq' };
   const destination = autoMap(source, {}, {});
+
+  expectType<{
+    some: string;
+  }>(destination);
+
   expect(destination).not.toBe(source);
 });
 
@@ -172,6 +238,14 @@ describe('if primitive properties are mapped', () => {
     symbolProperty: symbol,
   };
   const destination = autoMap(source, {}, {});
+
+  expectType<{
+    stringProperty: string;
+    numberProperty: number;
+    booleanProperty: boolean;
+    undefinedProperty: undefined;
+    symbolProperty: symbol;
+  }>(destination);
 
   test('string property is mapped', () => {
     expect(destination.stringProperty).toBe('qqq');
@@ -199,6 +273,11 @@ describe('if object properties are mapped', () => {
   };
   const destination = autoMap(source, {}, { copyObjects: true, copyArrays: true });
 
+  expectType<{
+    nullProperty: null;
+    arrayProperty: string[];
+  }>(destination);
+
   test('null property is mapped', () => {
     expect(destination.nullProperty).toBe(null);
   });
@@ -220,6 +299,15 @@ describe('if object properties are mapped', () => {
     };
 
     const destination = autoMap(source, {}, { copyObjects: true });
+
+    expectType<{
+      some: {
+        stringProperty: string;
+      };
+      another: {
+        numberProperty: number;
+      };
+    }>(destination);
 
     test('nested objects has different refs', () => {
       expect(destination.some).not.toBe(source.some);
@@ -244,6 +332,10 @@ test('filled destination', () => {
   };
 
   const result = autoMap(obj1, obj2, {});
+  expectType<{
+    prop1: string;
+    prop2: number;
+  }>(result);
   expect(result).toBe(obj2);
 
   const obj1And2 = obj2 as typeof obj1 & typeof obj2;
@@ -259,6 +351,11 @@ test('empty destination', () => {
   };
 
   const destination = autoMap(source, {}, {});
+
+  expectType<{
+    prop1: string;
+  }>(destination);
+
   expect(destination).not.toBe(source);
   expect(destination.prop1).toBe('qqq');
 });
@@ -291,7 +388,133 @@ test('symbols in select config will be stringified', () => {
       select: ['name', symbol as any],
     }
   );
+
+  expectType<{
+    name: string;
+  }>(result);
+
   expect(result).toEqual({
     name: 'Joe',
+  });
+});
+
+describe('if default value is applied to undefined values', () => {
+  test('null as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: null });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null;
+      undefinedProperty: undefined | null;
+      booleanProperty: boolean;
+      nested: {
+        prop1: undefined | null;
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: null,
+      booleanProperty: false,
+      nested: {
+        prop1: null,
+        prop2: '',
+      },
+    });
+  });
+
+  test('"default string" as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 'default string' });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null;
+      undefinedProperty: undefined | 'default string';
+      booleanProperty: boolean;
+      nested: {
+        prop1: undefined | 'default string';
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: 'default string',
+      booleanProperty: false,
+      nested: {
+        prop1: 'default string',
+        prop2: '',
+      },
+    });
+  });
+
+  test('null as default value for optional fields', () => {
+    const source: {
+      prop1: number;
+      prop2?: string;
+    } = {
+      prop1: 123,
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 'default string' });
+
+    expectType<{
+      prop1: number;
+      prop2: string | undefined;
+    }>(destination);
+
+    expect(destination).toEqual({
+      prop1: 123,
+    });
+  });
+});
+
+test('auto map properties in class constructor', () => {
+  class User {
+    name?: string;
+    age?: number;
+    id?: number;
+
+    constructor(user: User) {
+      autoMap(user, this, {
+        defaultValueIfUndefined: null,
+      });
+    }
+  }
+
+  const initialUser = new User({
+    age: 2,
+    name: 'Joe',
+    id: 123,
+  });
+
+  const userCopy = new User(initialUser);
+
+  expect(userCopy).toEqual({
+    age: 2,
+    name: 'Joe',
+    id: 123,
   });
 });

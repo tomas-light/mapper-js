@@ -4,5 +4,6 @@
   "coverageReporters": ["json", "html-spa"],
   "collectCoverageFrom": [
     "<rootDir>/src/**/*.{ts,tsx}"
-  ]
+  ],
+  "coveragePathIgnorePatterns": ["index.ts"]
 }

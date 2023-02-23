@@ -118,12 +118,13 @@ Here is a demo how `autoMap` works (it is a GIF):
 
 #### Config options:
 
-| Property              | Description                                                                                                                                                                             |
-|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `copyArrays?: true`  | If `true` nested *arrays* will be copied from source object                                                                                                                             |
-| `copyObjects?: true` | If `true` nested *objects* will be copied from source object                                                                                                                            |
-| `select?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties will be mapped. If not specified, all properties will be mapped                                                  |
-| `ignore?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties should be skipped. It has higher priority over `select` option.                                                  |
+| Property              | Description                                                                                                                                                             |
+|-----------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `copyArrays?: true`  | If `true` nested *arrays* will be copied from source object                                                                                                             |
+| `copyObjects?: true` | If `true` nested *objects* will be copied from source object                                                                                                            |
+| `select?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties will be mapped. If not specified, all properties will be mapped                                  |
+| `ignore?: string[]`  | Object keys joined with dot (`.`). Responsible for which of properties should be skipped. It has higher priority over `select` option.                                  |
+| `defaultValueIfUndefined`  | Used as replacer for undefined values. If you have object `{ foo: 'my str', bar: undefined, zed: undefined }` => default value will be assigned to `bar` and `zed` properties |
 
 If config does not include both `copyArrays` and `copyObjects`, only primitive types will be mapped.
 
