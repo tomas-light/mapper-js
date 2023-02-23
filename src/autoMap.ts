@@ -1,10 +1,10 @@
-import { AutoMapFunction, Config, DottedKeys } from './types';
+import { AutoMapResult, Config, DottedKeys } from './types';
 
-export const autoMap = <Source extends object, SourceConfig extends Config<Source>>(
+export const autoMap = <Source extends object, DefaultValue, SourceConfig extends Config<Source, DefaultValue>>(
   source: Source,
   destination: object,
   config: SourceConfig
-): AutoMapFunction<Source, SourceConfig> => {
+): AutoMapResult<Source, DefaultValue, SourceConfig> => {
   if (typeof source !== 'object' || source === null) {
     return source;
   }
@@ -33,7 +33,17 @@ export const autoMap = <Source extends object, SourceConfig extends Config<Sourc
       continue;
     }
 
-    if (value === null || value === undefined) {
+    if (value === null) {
+      (destination as Source)[sourceKey] = value;
+      continue;
+    }
+
+    if (value === undefined) {
+      if ('defaultValueIfUndefined' in config) {
+        (destination as Source)[sourceKey] = config.defaultValueIfUndefined as Source[typeof sourceKey];
+        continue;
+      }
+
       (destination as Source)[sourceKey] = value;
       continue;
     }
@@ -59,10 +69,10 @@ export const autoMap = <Source extends object, SourceConfig extends Config<Sourc
       nextLevelConfig.ignore = getNextLevelOfDottedKeys(nextLevelConfig.ignore) as any;
     }
 
-    (destination as Source)[sourceKey] = autoMap(value, {}, nextLevelConfig as Config<object>) as any;
+    (destination as Source)[sourceKey] = autoMap(value, {}, nextLevelConfig as Config<object, DefaultValue>) as any;
   }
 
-  return destination as any;
+  return destination as AutoMapResult<Source, DefaultValue, SourceConfig>;
 };
 
 export function getFirstLevelOfDottedKeys<T extends object>(dottedKeys: DottedKeys<T>[]) {
