@@ -491,6 +491,31 @@ describe('if default value is applied to undefined values', () => {
   });
 });
 
+test('check if any and unknown types are inferred', () => {
+  const a: {
+    foo?: any;
+    name?: string;
+    age?: number;
+    id?: number;
+  } = {};
+
+  const b = autoMap(a, {}, {
+    defaultValueIfUndefined: null,
+  });
+
+  expectType<unknown>(b.foo);
+  expectType<any>(b.foo);
+
+  expectType<{
+    foo?: any;
+    name?: string;
+    age?: number;
+    id?: number;
+  }>(b);
+
+  expect(true).toBeTruthy();
+});
+
 test('auto map properties in class constructor', () => {
   class User {
     name?: string;

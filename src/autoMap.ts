@@ -1,4 +1,6 @@
-import { AutoMapResult, Config, DottedKeys } from './types';
+import {
+  AutoMapResult, Config, DottedKeys,
+} from './types';
 
 export const autoMap = <Source extends object, DefaultValue, SourceConfig extends Config<Source, DefaultValue>>(
   source: Source,
