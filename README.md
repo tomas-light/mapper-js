@@ -112,6 +112,16 @@ const dto: UserDto = {
 const user = mapper.map(UserDto, User, dto); // { name: 'Joe', deleted: true, }
 ```
 
+Be aware, for correct type inference we recommend to add following rules to your `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": true
+  }
+}
+```
+
 Here is a demo how `autoMap` works (it is a GIF):
 
 ![mapper-js demo](readme-images/mapper-js%20autoMap%20demo.gif)
