@@ -24,11 +24,13 @@ export type MapFunctionKey<Instance extends object = object> = AnyConstructor<In
 export type DottedKeys<T extends object> = keyof {
   [key in keyof T as key extends string
     ? T[key] extends infer Value
-      ? Value extends Primitives | Array<any>
-        ? key
-        : Value extends object
-          ? key | (DottedKeys<Value> extends string ? `${key}.${DottedKeys<Value>}` : key)
-          : key
+      ? IsAny<Value> extends true
+        ? key // don't try to infer any type
+        : Value extends Primitives | Array<any>
+          ? key
+          : Value extends object
+            ? key | (DottedKeys<Value> extends string ? `${key}.${DottedKeys<Value>}` : key)
+            : key
       : never
     : never]: unknown;
 };
@@ -98,19 +100,23 @@ export type DeepSelect<
         ? never
         : key
       : never]:
-  IsUndefined<T[key]> extends true
-    // replace undefined value with default value
-    ? IsUndefined<DefaultValue> extends true
-      ? undefined
-      : undefined | DefaultValue
-    //
-    : T[key] extends Primitives | Array<any>
-      ? T[key]
-      : T[key] extends object
-        ? DeepSelect<
-          T[key],
-          DefaultValue,
-          NestedDottedKeys<T, SelectedKeys, key, T[key]>,
+  IsAny<T[key]> extends true
+    // don't try to infer any type
+    ? T[key]
+    : IsUndefined<T[key]> extends true
+      //
+      // replace undefined value with default value
+      ? IsUndefined<DefaultValue> extends true // if DefaultValue is not passed its type is "unknown" - we use "undefined" in this case
+        ? undefined
+        : undefined | DefaultValue
+      //
+      : T[key] extends Primitives | Array<any>
+        ? T[key]
+        : T[key] extends object
+          ? DeepSelect<
+            T[key],
+            DefaultValue,
+            NestedDottedKeys<T, SelectedKeys, key, T[key]>,
           NestedDottedKeys<T, IgnoredKeys, key, T[key]>,
           ValueConstraint
         >
@@ -133,35 +139,44 @@ export type NestedDottedKeys<
 
 export type IsUndefined<T> = undefined & T extends never ? false : true;
 
-/*
-function temp<T>(t: T): undefined extends T ? null : T {
-  return null as any;
-}
+export type IsAny<T> = unknown extends T ? true : false;
 
-type A1 = null extends number ? true : false;
-type A2 = null extends object ? true : false;
-type A3 = null extends string ? true : false;
-type A4 = null extends null ? true : false;
-type A5 = null extends undefined ? true : false;
-type A6 = undefined extends null ? true : false;
+// region test types
 
-type B1 = undefined & {};
-type B2 = undefined & undefined;
-type B3 = undefined & unknown;
+const expectType = <T>(valueOfType: T): void => undefined;
 
-type D1 = undefined extends never ? true : false;
-type D2 = null extends never ? true : false;
-type D3 = Primitives extends never ? true : false;
-type D4 = Array<any> extends never ? true : false;
-type D5 = object extends never ? true : false;
-type D6 = number extends never ? true : false;
+const anyV = null as unknown;
 
-type C1 = IsUndefined<undefined>;
-type C2 = IsUndefined<number>;
-type C3 = IsUndefined<object>;
-type C4 = IsUndefined<string>;
-type C5 = IsUndefined<null>;
-type C6 = IsUndefined<unknown>;
+expectType<false>(anyV as null extends number ? true : false);
+expectType<false>(anyV as null extends object ? true : false);
+expectType<false>(anyV as null extends string ? true : false);
+expectType<true>(anyV as null extends null ? true : false);
+expectType<false>(anyV as null extends undefined ? true : false);
+expectType<false>(anyV as undefined extends null ? true : false);
 
-const t1 = temp(23);
-*/
+expectType<never>(anyV as undefined & {});
+expectType<undefined>(anyV as undefined & unknown);
+
+expectType<false>(anyV as undefined extends never ? true : false);
+expectType<false>(anyV as null extends never ? true : false);
+expectType<false>(anyV as Primitives extends never ? true : false);
+expectType<false>(anyV as Array<any> extends never ? true : false);
+expectType<false>(anyV as object extends never ? true : false);
+expectType<false>(anyV as number extends never ? true : false);
+
+expectType<true>(anyV as IsUndefined<undefined>);
+expectType<false>(anyV as IsUndefined<number>);
+expectType<false>(anyV as IsUndefined<object>);
+expectType<false>(anyV as IsUndefined<string>);
+expectType<false>(anyV as IsUndefined<null>);
+expectType<true>(anyV as IsUndefined<unknown>);
+
+expectType<false>(anyV as IsAny<undefined>);
+expectType<false>(anyV as IsAny<number>);
+expectType<false>(anyV as IsAny<object>);
+expectType<false>(anyV as IsAny<string>);
+expectType<false>(anyV as IsAny<null>);
+expectType<true>(anyV as IsAny<unknown>);
+expectType<true>(anyV as IsAny<any>);
+
+// endregion
