@@ -446,15 +446,15 @@ describe('if default value is applied to undefined values', () => {
         prop2: '',
       },
     };
-    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 'default string' });
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 'default for undefined' as const });
 
     expectType<{
       numberProperty: number;
       nullProperty: null;
-      undefinedProperty: undefined | 'default string';
+      undefinedProperty: undefined | 'default for undefined';
       booleanProperty: boolean;
       nested: {
-        prop1: undefined | 'default string';
+        prop1: undefined | 'default for undefined';
         prop2: string;
       };
     }>(destination);
@@ -462,10 +462,10 @@ describe('if default value is applied to undefined values', () => {
     expect(destination).toEqual({
       numberProperty: 123,
       nullProperty: null,
-      undefinedProperty: 'default string',
+      undefinedProperty: 'default for undefined',
       booleanProperty: false,
       nested: {
-        prop1: 'default string',
+        prop1: 'default for undefined',
         prop2: '',
       },
     });
@@ -478,7 +478,193 @@ describe('if default value is applied to undefined values', () => {
     } = {
       prop1: 123,
     };
-    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 'default string' });
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfUndefined: 123 as const });
+
+    expectType<{
+      prop1: number;
+      prop2: string | 123 | undefined;
+    }>(destination);
+
+    expect(destination).toEqual({
+      prop1: 123,
+    });
+  });
+});
+
+describe('if default value is applied to null values', () => {
+  test('undefined as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNull: undefined });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null | undefined;
+      undefinedProperty: undefined;
+      booleanProperty: boolean;
+      nested: {
+        prop1: undefined;
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: undefined,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    });
+  });
+
+  test('"default string" as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNull: 'default for null' as const });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null | 'default for null';
+      undefinedProperty: undefined;
+      booleanProperty: boolean;
+      nested: {
+        prop1: undefined;
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: 'default for null',
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    });
+  });
+
+  test('optional fields are not affected', () => {
+    const source: {
+      prop1: number;
+      prop2?: string;
+    } = {
+      prop1: 123,
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNull: 'default for null' as const });
+
+    expectType<{
+      prop1: number;
+      prop2: string | undefined;
+    }>(destination);
+
+    expect(destination).toEqual({
+      prop1: 123,
+    });
+  });
+});
+
+describe('if default value is applied to null and undefined values', () => {
+  test('null as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNullOrUndefined: null });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null | undefined;
+      undefinedProperty: null | undefined;
+      booleanProperty: boolean;
+      nested: {
+        prop1: null | undefined;
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: null,
+      booleanProperty: false,
+      nested: {
+        prop1: null,
+        prop2: '',
+      },
+    });
+  });
+
+  test('"default string" as default value', () => {
+    const source = {
+      numberProperty: 123,
+      nullProperty: null,
+      undefinedProperty: undefined,
+      booleanProperty: false,
+      nested: {
+        prop1: undefined,
+        prop2: '',
+      },
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNullOrUndefined: 'default for null or undefined' as const });
+
+    expectType<{
+      numberProperty: number;
+      nullProperty: null | 'default for null or undefined';
+      undefinedProperty: undefined | 'default for null or undefined';
+      booleanProperty: boolean;
+      nested: {
+        prop1: undefined | 'default for null or undefined';
+        prop2: string;
+      };
+    }>(destination);
+
+    expect(destination).toEqual({
+      numberProperty: 123,
+      nullProperty: 'default for null or undefined',
+      undefinedProperty: 'default for null or undefined',
+      booleanProperty: false,
+      nested: {
+        prop1: 'default for null or undefined',
+        prop2: '',
+      },
+    });
+  });
+
+  test('optional fields are not affected', () => {
+    const source: {
+      prop1: number;
+      prop2?: string;
+    } = {
+      prop1: 123,
+    };
+    const destination = autoMap(source, {}, { copyObjects: true, defaultValueIfNullOrUndefined: 'default for null or undefined' as const });
 
     expectType<{
       prop1: number;
@@ -494,13 +680,12 @@ describe('if default value is applied to undefined values', () => {
 test('check if any and unknown types are inferred', () => {
   const a: {
     foo?: any;
-    name?: string;
     age?: number;
     id?: number;
   } = {};
 
   const b = autoMap(a, {}, {
-    defaultValueIfUndefined: null,
+    defaultValueIfUndefined: 123,
   });
 
   expectType<unknown>(b.foo);
@@ -508,7 +693,6 @@ test('check if any and unknown types are inferred', () => {
 
   expectType<{
     foo?: any;
-    name?: string;
     age?: number;
     id?: number;
   }>(b);

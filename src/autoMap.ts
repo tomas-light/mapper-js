@@ -2,11 +2,11 @@ import {
   AutoMapResult, Config, DottedKeys,
 } from './types';
 
-export const autoMap = <Source extends object, DefaultValue, SourceConfig extends Config<Source, DefaultValue>>(
+export const autoMap = <Source extends object, SourceConfig extends Config<Source>>(
   source: Source,
   destination: object,
   config: SourceConfig
-): AutoMapResult<Source, DefaultValue, SourceConfig> => {
+): AutoMapResult<Source, SourceConfig> => {
   if (typeof source !== 'object' || source === null) {
     return source;
   }
@@ -36,6 +36,16 @@ export const autoMap = <Source extends object, DefaultValue, SourceConfig extend
     }
 
     if (value === null) {
+      if ('defaultValueIfNull' in config) {
+        (destination as Source)[sourceKey] = config.defaultValueIfNull as Source[typeof sourceKey];
+        continue;
+      }
+
+      if ('defaultValueIfNullOrUndefined' in config) {
+        (destination as Source)[sourceKey] = config.defaultValueIfNullOrUndefined as Source[typeof sourceKey];
+        continue;
+      }
+
       (destination as Source)[sourceKey] = value;
       continue;
     }
@@ -43,6 +53,11 @@ export const autoMap = <Source extends object, DefaultValue, SourceConfig extend
     if (value === undefined) {
       if ('defaultValueIfUndefined' in config) {
         (destination as Source)[sourceKey] = config.defaultValueIfUndefined as Source[typeof sourceKey];
+        continue;
+      }
+
+      if ('defaultValueIfNullOrUndefined' in config) {
+        (destination as Source)[sourceKey] = config.defaultValueIfNullOrUndefined as Source[typeof sourceKey];
         continue;
       }
 
@@ -71,10 +86,10 @@ export const autoMap = <Source extends object, DefaultValue, SourceConfig extend
       nextLevelConfig.ignore = getNextLevelOfDottedKeys(nextLevelConfig.ignore) as any;
     }
 
-    (destination as Source)[sourceKey] = autoMap(value, {}, nextLevelConfig as Config<object, DefaultValue>) as any;
+    (destination as Source)[sourceKey] = autoMap(value, {}, nextLevelConfig as Config<object>) as any;
   }
 
-  return destination as AutoMapResult<Source, DefaultValue, SourceConfig>;
+  return destination as AutoMapResult<Source, SourceConfig>;
 };
 
 export function getFirstLevelOfDottedKeys<T extends object>(dottedKeys: DottedKeys<T>[]) {

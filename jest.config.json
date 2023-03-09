@@ -5,5 +5,5 @@
   "collectCoverageFrom": [
     "<rootDir>/src/**/*.{ts,tsx}"
   ],
-  "coveragePathIgnorePatterns": ["index.ts"]
+  "coveragePathIgnorePatterns": ["index.ts", "types.ts"]
 }
