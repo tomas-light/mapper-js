@@ -15,22 +15,29 @@ export type MapFunctionKey<Instance extends object = object> = AnyConstructor<In
  *     bar: {
  *       zed: {
  *         prop: string
- *        }
+ *       }
  *     }
+ *     list: {
+ *       name: string
+ *     }[]
  *   }
  * };
- * type Keys = DottedKeys<typeof myObj>; // 'foo' | 'foo.bar' | 'foo.bar.zed' | 'foo.bar.zed.prop'
+ * type Keys = DottedKeys<typeof myObj>; // 'foo' | 'foo.bar' | 'foo.bar.zed' | 'foo.bar.zed.prop' | 'foo.list' | 'foo.list.${number}.name'
  * */
 export type DottedKeys<T extends object> = keyof {
   [key in keyof T as key extends string
     ? T[key] extends infer Value
       ? IsAny<Value> extends true
         ? key // don't try to infer any type
-        : Value extends Primitives | Array<any>
+        : Value extends Primitives
           ? key
-          : Value extends object
-            ? key | (DottedKeys<Value> extends string ? `${key}.${DottedKeys<Value>}` : key)
-            : key
+          : Value extends Array<infer ArrayItem>
+            ? ArrayItem extends object
+              ? key | (DottedKeys<ArrayItem> extends string ? `${key}.${number}.${DottedKeys<ArrayItem>}` : key)
+              : key
+            : Value extends object
+              ? key | (DottedKeys<Value> extends string ? `${key}.${DottedKeys<Value>}` : key)
+              : key
       : never
     : never]: unknown;
 };
@@ -217,5 +224,16 @@ expectType<true>(anyV as IsAny<unknown>);
 expectType<true>(anyV as IsAny<unknown | undefined>);
 expectType<true>(anyV as IsAny<any>);
 
+type MyObj = {
+  foo: {
+    list: {
+      name: string;
+    }[];
+  };
+};
+
+let index = 0; index++;
+expectType<DottedKeys<MyObj>>('foo.list.0 .name');
+expectType<DottedKeys<MyObj>>(`foo.list.${index}.name`);
 
 // endregion
