@@ -1,6 +1,6 @@
 {
   "name": "@tomas-light/mapper-js",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "Mapper for js entities",
   "scripts": {
     "build": "tsc",
